@@ -1,35 +1,53 @@
-import { fetchContacts } from 'api';
-import {persistReducer} from 'redux-persist';
-import storage from "redux-persist/lib/storage"
+import { addContact, deleteContact, fetchContacts } from 'operations';
 import { createSlice } from '@reduxjs/toolkit';
 
-const arrayContacts = () => {
-  console.log(fetchContacts().then(data=> console.log(data)))
+
+const pendingReducer = state => {
+  state.isLoading = true;
+};
+
+const rejectedReducer = (state, action) => {
+  state.isLoading = false;
+  state.error = action.payload;
+};
+
+const fetchContactsFulfilledReducer = (state, action) => {
+  state.isLoading = false;
+  state.error = null;
+  state.items = action.payload;
+};
+
+const addContactFulfilledReducer = (state, action)=> {
+  state.isLoading = false;
+  state.error = null;
+  state.items.push(action.payload);
 }
 
-
+const deleteContactFulfilledReducer = (state, action)=> {
+  state.isLoading = false;
+  state.error = null;
+  const index = state.items.findIndex(contact => contact.id === action.payload.id);
+  state.items.splice(index, 1);
+}
 
 const contactsSlice = createSlice({
   name: 'contacts',
   initialState: {
-    array: [],
+    items: [],
+    isLoading: false,
+    error: null,
   },
-  reducers: {
-    change(state, action) {
-      
-      state.array = action.payload;
-      console.log(action.payload)
-    }
-  },
+  extraReducers: builder =>
+    builder
+      .addCase(fetchContacts.pending, pendingReducer)
+      .addCase(fetchContacts.fulfilled, fetchContactsFulfilledReducer)
+      .addCase(fetchContacts.rejected, rejectedReducer)
+      .addCase(addContact.pending, pendingReducer)
+      .addCase(addContact.fulfilled, addContactFulfilledReducer)
+      .addCase(addContact.rejected, rejectedReducer)
+      .addCase(deleteContact.pending, pendingReducer)
+      .addCase(deleteContact.fulfilled, deleteContactFulfilledReducer)
+      .addCase(deleteContact.rejected, rejectedReducer)
 });
 
-arrayContacts()
-
-const persistConfig = {
-    key: "contactsArray",
-    storage,
-    whitelist: ["array"]
-}
-
-export const contactsReducer = persistReducer(persistConfig, contactsSlice.reducer);
-export const { change } = contactsSlice.actions;
+export const contactsReducer = contactsSlice.reducer;
