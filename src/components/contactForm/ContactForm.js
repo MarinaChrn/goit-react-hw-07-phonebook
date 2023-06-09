@@ -1,21 +1,18 @@
 import { Formik } from "formik"
 import { Form, StyledLabel, Field, StyledButton } from "./ContactForm.styled"
 import { nanoid } from 'nanoid'
+import { addContact } from "operations";
 import { useDispatch, useSelector } from "react-redux";
 
 export const ContactForm = () => {
     const contacts = useSelector(state => state.contacts.items)
     const dispatch = useDispatch();
 
-    const addContact = (contact, actions, i) => {
-        let arraysOfName=[];
-        contacts.map(element=> (
-            arraysOfName.push(element.name) 
-        ));
-        if (!arraysOfName.includes(contact.name)) {
-            dispatch(addContact(contact));
+    const handleAddContact = (contact, actions, i) => {
+        if (contacts.find(element => contact.name===element.name)) {
+            alert(`${contact.name} is alredy in contacts`)
         } else {
-        alert(`${contact.name} is alredy in contacts`)
+            dispatch(addContact(contact))
         }
     }
 
@@ -27,7 +24,7 @@ export const ContactForm = () => {
         }}
         onSubmit={(contact, actions)=> {
             contact.id = nanoid();
-            addContact(contact, actions);
+            handleAddContact({...contact});
             actions.resetForm();
         }}
        >
